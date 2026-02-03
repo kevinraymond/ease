@@ -1,6 +1,6 @@
 [project]
 name = "ease-server"
-version = "1.0.0"
+version = "1.0.1"
 description = "EASE backend: Real-time AI image generation server"
 authors = [{ name = "Kevin Raymond" }]
 license = { text = "MIT" }
