@@ -2,46 +2,170 @@ name: Release
 
 on:
   push:
-    tags:
-      - "v*"
-  workflow_dispatch:
-    inputs:
-      version:
-        description: 'Version to release (e.g., 1.0.0)'
-        required: true
-        type: string
+    branches: [main]
 
 env:
   REGISTRY: ghcr.io
 
 jobs:
+  # Version bump and tagging (sequential to avoid git conflicts)
   release:
+    # Skip version bump commits
+    if: "!contains(github.event.head_commit.message, '[skip ci]')"
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      packages: write
-
+    outputs:
+      server_changed: ${{ steps.changes.outputs.server }}
+      frontend_changed: ${{ steps.changes.outputs.frontend }}
+      server_version: ${{ steps.server-version.outputs.new_version }}
+      frontend_version: ${{ steps.frontend-version.outputs.new_version }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Detect changes
+        uses: dorny/paths-filter@v3
+        id: changes
+        with:
+          filters: |
+            server:
+              - 'server/**'
+            frontend:
+              - 'frontend/**'
+
+      - name: Bump server version
+        if: steps.changes.outputs.server == 'true'
+        id: server-version
+        run: |
+          # Get commits since last server tag
+          LAST_TAG=$(git tag -l "server-v*" --sort=-v:refname | head -n1)
+          if [ -z "$LAST_TAG" ]; then
+            COMMITS=$(git log --pretty=format:"%s" -- server/)
+          else
+            COMMITS=$(git log ${LAST_TAG}..HEAD --pretty=format:"%s" -- server/)
+          fi
+
+          # Determine bump type from conventional commits
+          if echo "$COMMITS" | grep -qE "^BREAKING CHANGE:|^[a-z]+\!:"; then
+            BUMP="major"
+          elif echo "$COMMITS" | grep -qE "^feat(\(.+\))?:"; then
+            BUMP="minor"
+          else
+            BUMP="patch"
+          fi
+          echo "Detected bump type: $BUMP"
+
+          # Get current version and calculate new version
+          CURRENT=$(grep -E '^version = ' server/pyproject.toml | sed 's/version = "\(.*\)"/\1/')
+          IFS='.' read -r major minor patch <<< "$CURRENT"
+
+          case "$BUMP" in
+            major) major=$((major + 1)); minor=0; patch=0 ;;
+            minor) minor=$((minor + 1)); patch=0 ;;
+            patch) patch=$((patch + 1)) ;;
+          esac
+
+          NEW_VERSION="${major}.${minor}.${patch}"
+          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "Server version: $CURRENT -> $NEW_VERSION"
+
+          # Update pyproject.toml
+          sed -i "s/^version = \".*\"/version = \"$NEW_VERSION\"/" server/pyproject.toml
+
+      - name: Bump frontend version
+        if: steps.changes.outputs.frontend == 'true'
+        id: frontend-version
+        run: |
+          # Get commits since last frontend tag
+          LAST_TAG=$(git tag -l "frontend-v*" --sort=-v:refname | head -n1)
+          if [ -z "$LAST_TAG" ]; then
+            COMMITS=$(git log --pretty=format:"%s" -- frontend/)
+          else
+            COMMITS=$(git log ${LAST_TAG}..HEAD --pretty=format:"%s" -- frontend/)
+          fi
+
+          # Determine bump type from conventional commits
+          if echo "$COMMITS" | grep -qE "^BREAKING CHANGE:|^[a-z]+\!:"; then
+            BUMP="major"
+          elif echo "$COMMITS" | grep -qE "^feat(\(.+\))?:"; then
+            BUMP="minor"
+          else
+            BUMP="patch"
+          fi
+          echo "Detected bump type: $BUMP"
+
+          # Get current version and calculate new version
+          CURRENT=$(node -p "require('./frontend/package.json').version")
+          IFS='.' read -r major minor patch <<< "$CURRENT"
+
+          case "$BUMP" in
+            major) major=$((major + 1)); minor=0; patch=0 ;;
+            minor) minor=$((minor + 1)); patch=0 ;;
+            patch) patch=$((patch + 1)) ;;
+          esac
+
+          NEW_VERSION="${major}.${minor}.${patch}"
+          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "Frontend version: $CURRENT -> $NEW_VERSION"
+
+          # Update package.json
+          cd frontend
+          npm version $NEW_VERSION --no-git-tag-version
+
+      - name: Commit version bumps and create tags
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Stage changed files
+          CHANGES=""
+          if [ "${{ steps.changes.outputs.server }}" == "true" ]; then
+            git add server/pyproject.toml
+            CHANGES="${CHANGES}server-v${{ steps.server-version.outputs.new_version }} "
+          fi
+          if [ "${{ steps.changes.outputs.frontend }}" == "true" ]; then
+            git add frontend/package.json frontend/package-lock.json 2>/dev/null || git add frontend/package.json
+            CHANGES="${CHANGES}frontend-v${{ steps.frontend-version.outputs.new_version }} "
+          fi
+
+          # Commit if there are staged changes
+          if ! git diff --cached --quiet; then
+            git commit -m "chore: release ${CHANGES}[skip ci]"
+
+            # Create tags
+            if [ "${{ steps.changes.outputs.server }}" == "true" ]; then
+              git tag "server-v${{ steps.server-version.outputs.new_version }}"
+            fi
+            if [ "${{ steps.changes.outputs.frontend }}" == "true" ]; then
+              git tag "frontend-v${{ steps.frontend-version.outputs.new_version }}"
+            fi
+
+            git push origin main --follow-tags
+          fi
+
+  # Build and push server image (parallel)
+  build-server:
+    needs: release
+    if: needs.release.outputs.server_changed == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main  # Get the updated commit with version bump
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Log in to Container Registry
+      - name: Login to GHCR
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Extract version
-        id: version
-        run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "VERSION=${{ inputs.version }}" >> $GITHUB_OUTPUT
-          else
-            echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
-          fi
 
       - name: Build and push server image
         uses: docker/build-push-action@v6
@@ -49,13 +173,33 @@ jobs:
           context: ./server
           push: true
           tags: |
-            ${{ env.REGISTRY }}/${{ github.repository_owner }}/ease-server:${{ steps.version.outputs.VERSION }}
+            ${{ env.REGISTRY }}/${{ github.repository_owner }}/ease-server:${{ needs.release.outputs.server_version }}
             ${{ env.REGISTRY }}/${{ github.repository_owner }}/ease-server:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-          labels: |
-            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
-            org.opencontainers.image.version=${{ steps.version.outputs.VERSION }}
+          cache-from: type=gha,scope=server
+          cache-to: type=gha,mode=max,scope=server
+
+  # Build and push frontend image (parallel)
+  build-frontend:
+    needs: release
+    if: needs.release.outputs.frontend_changed == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main  # Get the updated commit with version bump
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and push frontend image
         uses: docker/build-push-action@v6
@@ -63,15 +207,7 @@ jobs:
           context: ./frontend
           push: true
           tags: |
-            ${{ env.REGISTRY }}/${{ github.repository_owner }}/ease-frontend:${{ steps.version.outputs.VERSION }}
+            ${{ env.REGISTRY }}/${{ github.repository_owner }}/ease-frontend:${{ needs.release.outputs.frontend_version }}
             ${{ env.REGISTRY }}/${{ github.repository_owner }}/ease-frontend:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-          labels: |
-            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
-            org.opencontainers.image.version=${{ steps.version.outputs.VERSION }}
-
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          generate_release_notes: true
+          cache-from: type=gha,scope=frontend
+          cache-to: type=gha,mode=max,scope=frontend
