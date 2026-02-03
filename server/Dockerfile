@@ -7,6 +7,7 @@ RUN apt-get update && apt-get install -y \
     python3.10 \
     python3-pip \
     python3.10-venv \
+    git \
     && rm -rf /var/lib/apt/lists/*
 
 # Install uv package manager

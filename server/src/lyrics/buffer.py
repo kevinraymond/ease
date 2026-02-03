@@ -1,7 +1,7 @@
 """Rolling lyric buffer with time-based decay for keyword persistence."""
 
 import time
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Optional
 
 

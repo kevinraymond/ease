@@ -175,10 +175,10 @@ class PoseWarper:
 
             # Find corresponding target points
             # (simplified - in practice you'd track which keypoint each vertex corresponds to)
-            src_tri = np.float32([pt1, pt2, pt3])
-
+            # Note: src_tri would be np.float32([pt1, pt2, pt3])
             # For now, just copy - full implementation would find corresponding target triangle
             # and warp the triangle region
+            _ = (pt1, pt2, pt3)  # Placeholder for full implementation
 
         return output  # Placeholder - TPS is preferred
 

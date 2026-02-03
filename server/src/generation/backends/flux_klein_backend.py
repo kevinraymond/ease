@@ -503,11 +503,8 @@ class FluxKleinBackend(BaseImageGenerator):
         Returns:
             True if FP8 is available, False otherwise
         """
-        try:
-            from optimum.quanto import freeze, qfloat8, quantize
-            return True
-        except ImportError:
-            return False
+        import importlib.util
+        return importlib.util.find_spec("optimum.quanto") is not None
 
     def _apply_fp8_quantization(self) -> bool:
         """Apply FP8 quantization to the transformer using optimum-quanto.

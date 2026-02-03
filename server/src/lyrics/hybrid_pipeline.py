@@ -53,7 +53,6 @@ INITIALIZING → FINGERPRINTING → MATCHED (DB lyrics)
 ```
 """
 
-import asyncio
 import logging
 import threading
 import time
@@ -63,7 +62,7 @@ from typing import Callable, Optional
 
 import numpy as np
 
-from .detector import LyricDetector, TranscriptionResult
+from .detector import LyricDetector
 from .fingerprinter import Fingerprinter
 from .keywords import KeywordExtractor
 from .lyric_database import LyricDatabase, LyricLine, Song

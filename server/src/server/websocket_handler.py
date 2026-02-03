@@ -11,20 +11,12 @@ from typing import Optional
 import numpy as np
 import psutil
 from fastapi import WebSocket, WebSocketDisconnect
-
-# Process-specific monitoring for accurate CPU/RAM stats
-_PROCESS = psutil.Process(os.getpid())
-_PROCESS.cpu_percent(interval=None)  # Prime first call (returns 0)
 from pydantic import ValidationError
 
 from .protocol import (
     AudioMetrics,
     GenerationConfig,
     MappingConfig,
-    ConfigMessage,
-    MetricsMessage,
-    StartMessage,
-    StopMessage,
     FrameMetadata,
     StatusMessage,
     ServerConfig,
@@ -32,21 +24,13 @@ from .protocol import (
     ErrorMessage,
     FpsMessage,
     StoryConfig,
-    StorySceneConfig,
-    StoryLoadMessage,
-    StoryLoadPresetMessage,
-    StoryControlMessage,
-    StoryUnloadMessage,
     StoryStateResponse,
     RawAudioChunk,
     LyricInfo,
     LyricUpdate,
     LyricPipelineState,
-    BackendInfo,
     AVAILABLE_BACKENDS,
     AUDIO_REACTIVE_BACKEND,
-    STREAM_DIFFUSION_BACKEND,
-    FLUX_KLEIN_BACKEND,
 )
 from ..story.schema import StoryScript, SceneDefinition, SceneTrigger, SceneTransition
 from ..story.presets import get_story_preset, list_story_presets
@@ -55,6 +39,10 @@ from ..lyrics import (
     create_lyric_provider_from_settings,
 )
 from ..config import settings
+
+# Process-specific monitoring for accurate CPU/RAM stats
+_PROCESS = psutil.Process(os.getpid())
+_PROCESS.cpu_percent(interval=None)  # Prime first call (returns 0)
 
 logger = logging.getLogger(__name__)
 
@@ -737,7 +725,6 @@ class GenerationSession:
             import torch
             if torch.cuda.is_available():
                 # Get memory info for the first GPU
-                vram_used = torch.cuda.memory_allocated(0)
                 vram_reserved = torch.cuda.memory_reserved(0)
                 vram_total = torch.cuda.get_device_properties(0).total_memory
                 vram_used_gb = vram_reserved / (1024**3)  # Use reserved as it's more accurate

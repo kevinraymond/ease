@@ -149,6 +149,8 @@ def create_generator_from_settings() -> ImageGenerator:
 
 
 __all__ = [
+    "BaseImageGenerator",
+    "GeneratorCapability",
     "StreamDiffusionBackend",
     "FluxKleinBackend",
     "AudioReactiveBackend",

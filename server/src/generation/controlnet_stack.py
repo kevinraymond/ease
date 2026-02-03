@@ -9,7 +9,6 @@ import logging
 from typing import Optional, List, Tuple, Dict, Any
 from PIL import Image
 from dataclasses import dataclass
-import numpy as np
 
 from ..config import settings
 

@@ -463,7 +463,7 @@ def diagnose(audio_path: Path, db_path: str = "./lyrics_db.sqlite") -> None:
     from .fingerprinter import Fingerprinter
     from .lyric_database import LyricDatabase
 
-    print(f"\n=== Fingerprint Diagnostic ===\n")
+    print("\n=== Fingerprint Diagnostic ===\n")
 
     # 1. Load audio
     print(f"1. Loading audio: {audio_path}")
@@ -475,7 +475,7 @@ def diagnose(audio_path: Path, db_path: str = "./lyrics_db.sqlite") -> None:
     print(f"   OK: {len(audio)/sample_rate:.1f}s at {sample_rate}Hz")
 
     # 2. Create fingerprinter
-    print(f"\n2. Initializing fingerprinter...")
+    print("\n2. Initializing fingerprinter...")
     fp = Fingerprinter()
     if not fp.is_available():
         print("   FAILED: Chromaprint not available")
@@ -483,7 +483,7 @@ def diagnose(audio_path: Path, db_path: str = "./lyrics_db.sqlite") -> None:
     print("   OK: Chromaprint available")
 
     # 3. Generate hash fingerprint
-    print(f"\n3. Generating encoded fingerprint...")
+    print("\n3. Generating encoded fingerprint...")
     fp_hash = fp.fingerprint(audio, sample_rate)
     if fp_hash:
         print(f"   OK: {fp_hash[:50]}...")
@@ -491,7 +491,7 @@ def diagnose(audio_path: Path, db_path: str = "./lyrics_db.sqlite") -> None:
         print("   FAILED: No hash generated")
 
     # 4. Generate raw fingerprint
-    print(f"\n4. Generating raw fingerprint...")
+    print("\n4. Generating raw fingerprint...")
     fp_raw = fp.fingerprint_raw(audio, sample_rate)
     if fp_raw:
         print(f"   OK: {len(fp_raw)} integers")
@@ -507,7 +507,7 @@ def diagnose(audio_path: Path, db_path: str = "./lyrics_db.sqlite") -> None:
 
     # 6. Test exact match
     if fp_hash:
-        print(f"\n6. Testing exact match...")
+        print("\n6. Testing exact match...")
         exact = db.find_song_by_fingerprint(fp_hash)
         if exact:
             print(f"   MATCH: {exact.title} (id={exact.id})")
@@ -516,7 +516,7 @@ def diagnose(audio_path: Path, db_path: str = "./lyrics_db.sqlite") -> None:
 
     # 7. Test fuzzy match
     if fp_raw and songs:
-        print(f"\n7. Testing fuzzy match...")
+        print("\n7. Testing fuzzy match...")
         for song in songs:
             if song.fingerprint_raw:
                 score = db._compare_fingerprints_raw(fp_raw, song.fingerprint_raw)
@@ -525,7 +525,7 @@ def diagnose(audio_path: Path, db_path: str = "./lyrics_db.sqlite") -> None:
             else:
                 print(f"   {song.title}: NO RAW DATA")
 
-    print(f"\n=== Done ===\n")
+    print("\n=== Done ===\n")
 
 
 def main():

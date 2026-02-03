@@ -8,7 +8,7 @@ import logging
 import numpy as np
 
 from ..config import settings
-from .procedural_pose import ProceduralPoseGenerator, PoseAnimationMode, PoseFraming, BodyPart
+from .procedural_pose import ProceduralPoseGenerator, PoseAnimationMode, PoseFraming
 
 logger = logging.getLogger(__name__)
 
@@ -337,7 +337,7 @@ class StreamDiffusionWrapper:
         from diffusers import AutoPipelineForText2Image, LCMScheduler
         import torch
 
-        logger.info(f"Loading txt2img pipeline for first-frame generation...")
+        logger.info("Loading txt2img pipeline for first-frame generation...")
 
         # Try loading with fp16 variant first, fall back to default if not available
         try:
@@ -731,7 +731,7 @@ class StreamDiffusionWrapper:
             try:
                 import torch
                 with torch.no_grad():
-                    test_result = self._txt2img_pipe(
+                    self._txt2img_pipe(
                         prompt="test",
                         num_inference_steps=self._hyper_sd_steps,
                         guidance_scale=0.0,
@@ -1227,7 +1227,7 @@ class StreamDiffusionWrapper:
             # When txt2img mode is enabled for procedural poses, route through the
             # dedicated txt2img + ControlNet path for better pose control
             if self._procedural_use_txt2img and self._controlnet_txt2img_pipe is not None:
-                logger.info(f"PROCEDURAL TXT2IMG: Using txt2img + ControlNet for strong pose control")
+                logger.info("PROCEDURAL TXT2IMG: Using txt2img + ControlNet for strong pose control")
                 return self._generate_controlnet_txt2img(
                     prompt=prompt,
                     pose_image=self._cached_pose,
@@ -1263,7 +1263,7 @@ class StreamDiffusionWrapper:
             if not self._pose_extracted:
                 # First extraction after reset
                 should_extract = True
-                logger.info(f"Extracting pose for first time after reset")
+                logger.info("Extracting pose for first time after reset")
             elif not self._pose_lock and (self._controlnet_frame_count % self._pose_drift_interval) == 0:
                 # Drift mode: re-extract periodically
                 should_extract = True
@@ -1315,7 +1315,7 @@ class StreamDiffusionWrapper:
             logger.debug(f"Using cached pose (lock={self._pose_lock}, epoch={self._generation_epoch})")
 
         # Debug: Log the actual pose being used
-        pose_info = f"None" if self._cached_pose is None else f"size={self._cached_pose.size}, mode={self._cached_pose.mode}"
+        pose_info = "None" if self._cached_pose is None else f"size={self._cached_pose.size}, mode={self._cached_pose.mode}"
 
         # BOTH MODES now use img2img + ControlNet for consistent style
         # The only difference is the pose source:

@@ -2,9 +2,8 @@
 
 import torch
 import logging
-import os
 from pathlib import Path
-from typing import Optional, Tuple
+from typing import Optional
 import hashlib
 
 from ..config import settings
@@ -31,14 +30,16 @@ class TensorRTCompiler:
 
     def _check_tensorrt_available(self) -> bool:
         """Check if TensorRT is available."""
-        try:
-            import tensorrt
-            import torch_tensorrt
-            logger.info(f"TensorRT version: {tensorrt.__version__}")
-            return True
-        except ImportError as e:
-            logger.warning(f"TensorRT not available: {e}")
+        import importlib.util
+        if importlib.util.find_spec("tensorrt") is None:
+            logger.warning("TensorRT not available: tensorrt package not installed")
             return False
+        if importlib.util.find_spec("torch_tensorrt") is None:
+            logger.warning("TensorRT not available: torch_tensorrt package not installed")
+            return False
+        import tensorrt
+        logger.info(f"TensorRT version: {tensorrt.__version__}")
+        return True
 
     def _get_cache_key(
         self,
@@ -172,7 +173,6 @@ class TensorRTCompiler:
         original_unet: torch.nn.Module,
     ) -> torch.nn.Module:
         """Load a cached TensorRT engine."""
-        import torch_tensorrt
 
         logger.info(f"Loading cached TensorRT engine from {cache_path}")
         return torch.jit.load(str(cache_path))
@@ -331,32 +331,33 @@ class TensorRTCompiler:
 
         # Define input specifications for FLUX transformer
         # These match the FluxTransformer2DModel forward signature
-        hidden_states_spec = torch_tensorrt.Input(
-            min_shape=(1, num_patches, hidden_size),
-            opt_shape=(1, num_patches, hidden_size),
-            max_shape=(self.max_batch_size, num_patches, hidden_size),
-            dtype=dtype,
-        )
-
-        encoder_hidden_states_spec = torch_tensorrt.Input(
-            min_shape=(1, 1, hidden_size),
-            opt_shape=(1, text_seq_len, hidden_size),
-            max_shape=(self.max_batch_size, text_seq_len, hidden_size),
-            dtype=dtype,
-        )
-
-        pooled_projections_spec = torch_tensorrt.Input(
-            min_shape=(1, pooled_dim),
-            opt_shape=(1, pooled_dim),
-            max_shape=(self.max_batch_size, pooled_dim),
-            dtype=dtype,
-        )
-
-        timestep_spec = torch_tensorrt.Input(
-            min_shape=(1,),
-            opt_shape=(1,),
-            max_shape=(self.max_batch_size,),
-            dtype=dtype,
+        # Note: These specs are for reference/future use with direct TRT compilation
+        # Currently using torch.compile with tensorrt backend instead
+        _ = (
+            torch_tensorrt.Input(
+                min_shape=(1, num_patches, hidden_size),
+                opt_shape=(1, num_patches, hidden_size),
+                max_shape=(self.max_batch_size, num_patches, hidden_size),
+                dtype=dtype,
+            ),  # hidden_states_spec
+            torch_tensorrt.Input(
+                min_shape=(1, 1, hidden_size),
+                opt_shape=(1, text_seq_len, hidden_size),
+                max_shape=(self.max_batch_size, text_seq_len, hidden_size),
+                dtype=dtype,
+            ),  # encoder_hidden_states_spec
+            torch_tensorrt.Input(
+                min_shape=(1, pooled_dim),
+                opt_shape=(1, pooled_dim),
+                max_shape=(self.max_batch_size, pooled_dim),
+                dtype=dtype,
+            ),  # pooled_projections_spec
+            torch_tensorrt.Input(
+                min_shape=(1,),
+                opt_shape=(1,),
+                max_shape=(self.max_batch_size,),
+                dtype=dtype,
+            ),  # timestep_spec
         )
 
         # Compile with TensorRT using Torch-TensorRT dynamo backend

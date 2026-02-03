@@ -2,7 +2,7 @@
 
 import logging
 from typing import Optional, Tuple
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 from .schema import (
     StoryScript,

@@ -35,7 +35,7 @@ import gc
 import time
 import logging
 import threading
-from typing import Optional, Union, TYPE_CHECKING
+from typing import Optional
 
 import torch
 from PIL import Image
@@ -44,8 +44,8 @@ from dataclasses import dataclass
 from .stream_diffusion import StreamDiffusionWrapper
 from .keyframe_interpolator import KeyframeInterpolationPipeline, KeyframeConfig
 from .frame_encoder import FrameEncoder
-from .base import GenerationRequest, GenerationResult, GeneratorCapability, ImageGenerator
-from .backends import create_generator, StreamDiffusionBackend
+from .base import GenerationRequest, ImageGenerator
+from .backends import create_generator
 
 from ..mapping.audio_mapper import AudioMapper, GenerationParams
 from ..server.protocol import MappingConfig
@@ -524,7 +524,7 @@ class GenerationPipeline:
 
                 # Check for periodic txt2img (beat-triggered fresh pose)
                 if params.force_txt2img:
-                    logger.info(f"Force txt2img triggered (periodic pose refresh) - clearing anchor")
+                    logger.info("Force txt2img triggered (periodic pose refresh) - clearing anchor")
                     self._last_frame = None
                     # In anchored mode, also clear anchor to get fresh reference
                     if self._use_anchored_mode:

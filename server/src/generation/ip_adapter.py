@@ -207,15 +207,13 @@ class IPAdapterFaceID:
 
     def _load_ip_adapter(self) -> None:
         """Load IP-Adapter model."""
-        try:
-            from ip_adapter.ip_adapter_faceid import IPAdapterFaceID as IPAdapterModel
-
+        import importlib.util
+        if importlib.util.find_spec("ip_adapter") is not None:
             # Note: Actual loading requires the base pipeline
             # This will be integrated when creating the combined pipeline
             logger.info(f"IP-Adapter model ready: {self.config.model_id}")
-
-        except ImportError as e:
-            logger.warning(f"IP-Adapter not available: {e}")
+        else:
+            logger.warning("IP-Adapter not available: ip_adapter package not installed")
 
     def set_reference_image(self, image: Image.Image) -> bool:
         """Set reference image for face identity.

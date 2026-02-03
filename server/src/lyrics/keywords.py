@@ -166,7 +166,6 @@ class KeywordExtractor:
 
         # Calculate weights
         results: list[tuple[str, float]] = []
-        max_count = max(word_counts.values()) if word_counts else 1
 
         for word, count in word_counts.items():
             # Base weight from frequency (normalized)

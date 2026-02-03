@@ -143,7 +143,6 @@ class StreamDiffusionBackend(BaseImageGenerator):
 
         # Extract backend hints
         hints = request.backend_hints
-        controlnet_image = hints.get("controlnet_image")
         use_taesd = hints.get("use_taesd", self._use_taesd)
 
         # Decide txt2img vs img2img

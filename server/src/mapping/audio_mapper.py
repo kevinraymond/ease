@@ -1,18 +1,17 @@
 """Enhanced audio feature mapping for SOTA AI generation control."""
 
-from dataclasses import dataclass, field
-from typing import Optional, List, Tuple
-import random
-import math
 import logging
+import random
 import time
-
-logger = logging.getLogger(__name__)
+from dataclasses import dataclass, field
+from typing import Optional, List
 
 from .parameter_curves import CurveType, map_range
 from .prompt_modulator import PromptModulator, ModulationConfig, FluxPromptModulator
-from .color_organ_modulator import ColorOrganModulator, ColorOrganConfig
+from .color_organ_modulator import ColorOrganModulator
 from ..server.protocol import AudioMetrics, GenerationConfig, MappingConfig, AudioSource, CurveType as ProtocolCurveType
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass

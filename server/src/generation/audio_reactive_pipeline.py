@@ -235,7 +235,7 @@ class AudioReactivePipeline:
         # Use the beat_seed_jump flag from audio mapper (more reliable than local detection)
         is_seed_jump = is_beat_seed_jump
         if is_seed_jump:
-            logger.info(f"Beat seed jump signaled: will inject txt2img")
+            logger.info("Beat seed jump signaled: will inject txt2img")
 
         # Apply onset effects
         if is_onset and onset_confidence > 0.3:
@@ -264,7 +264,7 @@ class AudioReactivePipeline:
             noise_array = np_rng.integers(0, 256, (self.height, self.width, 3), dtype=np.uint8)
             image = Image.fromarray(noise_array)
             strength = 0.99  # Maximum strength to mostly ignore the noise pattern
-            logger.info(f"Beat seed jump: injecting noise image for fresh generation")
+            logger.info("Beat seed jump: injecting noise image for fresh generation")
 
         # Use the pipeline's built-in img2img - much simpler and reliable
         result = self._pipe(

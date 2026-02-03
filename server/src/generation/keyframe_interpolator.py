@@ -14,14 +14,12 @@ For best results, install RIFE:
 """
 
 import torch
-import torch.nn.functional as F
 import logging
 from typing import Optional, List, Tuple
 from PIL import Image
 import numpy as np
 from dataclasses import dataclass
 
-from ..config import settings
 
 logger = logging.getLogger(__name__)
 

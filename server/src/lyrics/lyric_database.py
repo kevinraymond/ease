@@ -326,7 +326,7 @@ class LyricDatabase:
             )
             logger.info(f"No fuzzy match (best={best_score:.2f} < {threshold}). Top: {scores_str}")
         else:
-            logger.info(f"No fuzzy match: database empty or no raw fingerprints")
+            logger.info("No fuzzy match: database empty or no raw fingerprints")
         return None
 
     def _compare_fingerprints_raw(
