@@ -617,7 +617,7 @@ class ProceduralPoseGenerator:
                 int(angle),
                 0, 360, 1
             )
-            cv2.fillConvexPoly(canvas, polygon, color)
+            cv2.fillConvexPoly(canvas, np.array(polygon, dtype=np.int32), color)  # type: ignore[call-overload]
 
         # Draw keypoints on top
         for i, kp in enumerate(keypoints):

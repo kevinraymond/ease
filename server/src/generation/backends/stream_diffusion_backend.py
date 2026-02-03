@@ -146,6 +146,8 @@ class StreamDiffusionBackend(BaseImageGenerator):
         use_taesd = hints.get("use_taesd", self._use_taesd)
 
         # Decide txt2img vs img2img
+        if self._wrapper is None:
+            raise RuntimeError("StreamDiffusionBackend not initialized")
         if request.input_image is None:
             # txt2img mode
             image = self._wrapper.generate_txt2img(

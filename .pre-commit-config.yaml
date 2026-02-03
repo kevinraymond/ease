@@ -1,0 +1,16 @@
+repos:
+  - repo: local
+    hooks:
+      - id: ruff
+        name: ruff
+        entry: bash -c 'cd server && uv run ruff check --fix src/'
+        language: system
+        types: [python]
+        pass_filenames: false
+
+      - id: mypy
+        name: mypy
+        entry: bash -c 'cd server && uv run mypy --ignore-missing-imports src/'
+        language: system
+        types: [python]
+        pass_filenames: false

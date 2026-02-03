@@ -12,9 +12,12 @@ import logging
 import time
 from collections import deque
 from dataclasses import dataclass
-from typing import Optional
+from typing import Any, Optional, TYPE_CHECKING
 
 import numpy as np
+
+if TYPE_CHECKING:
+    from .vocal_separator import VocalSeparator
 
 logger = logging.getLogger(__name__)
 
@@ -99,11 +102,11 @@ class LyricDetector:
         self._last_transcription_time = 0.0
 
         # Model loaded lazily
-        self._model = None
+        self._model: Optional[Any] = None
         self._model_loaded = False
 
         # Vocal separator loaded lazily
-        self._vocal_separator = None
+        self._vocal_separator: Optional["VocalSeparator"] = None
         self._vocal_separator_loaded = False
 
     def _ensure_model_loaded(self) -> bool:
@@ -220,7 +223,7 @@ class LyricDetector:
         try:
             # Optional: Separate vocals using Demucs
             separation_time_ms = 0.0
-            if self._ensure_separator_loaded():
+            if self._ensure_separator_loaded() and self._vocal_separator is not None:
                 sep_start = time.time()
                 vocals = self._vocal_separator.separate_vocals(
                     audio, input_sample_rate=self.target_sample_rate

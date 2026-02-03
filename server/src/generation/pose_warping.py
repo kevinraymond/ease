@@ -125,7 +125,7 @@ class PoseWarper:
 
         # Create TPS transformer
         # Note: cv2.createThinPlateSplineShapeTransformer requires matched points
-        tps = cv2.createThinPlateSplineShapeTransformer()
+        tps = cv2.createThinPlateSplineShapeTransformer()  # type: ignore[attr-defined]
 
         # Reshape for OpenCV (needs shape [1, n, 2])
         src_pts_cv = src_with_corners.reshape(1, -1, 2)

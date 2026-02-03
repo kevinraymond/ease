@@ -6,7 +6,7 @@ identity preservation during audio-reactive transformations.
 
 import torch
 import logging
-from typing import Optional, List, Tuple
+from typing import Any, Optional, List, Tuple
 from PIL import Image
 from dataclasses import dataclass
 import numpy as np
@@ -42,8 +42,8 @@ class FaceDetector:
 
     def __init__(self, device: str = "cuda"):
         self.device = device
-        self._detector = None
-        self._embedding_model = None
+        self._detector: Optional[Any] = None
+        self._embedding_model: Optional[Any] = None
         self._initialized = False
 
     def initialize(self) -> None:

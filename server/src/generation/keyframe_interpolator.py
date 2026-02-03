@@ -15,7 +15,7 @@ For best results, install RIFE:
 
 import torch
 import logging
-from typing import Optional, List, Tuple
+from typing import Any, Optional, List, Tuple
 from PIL import Image
 import numpy as np
 from dataclasses import dataclass
@@ -45,7 +45,7 @@ class RIFEInterpolator:
     def __init__(self, device: str = "cuda", scale: float = 1.0):
         self.device = device
         self.scale = scale
-        self._model = None
+        self._model: Optional[Any] = None
         self._initialized = False
 
     def initialize(self) -> None:

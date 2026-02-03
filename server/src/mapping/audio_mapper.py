@@ -4,7 +4,7 @@ import logging
 import random
 import time
 from dataclasses import dataclass, field
-from typing import Optional, List
+from typing import Optional, List, Union
 
 from .parameter_curves import CurveType, map_range
 from .prompt_modulator import PromptModulator, ModulationConfig, FluxPromptModulator
@@ -126,6 +126,7 @@ class AudioMapper:
         self._use_color_organ = use_color_organ
 
         # Use appropriate modulator based on mode
+        self.prompt_modulator: Union[PromptModulator, FluxPromptModulator, ColorOrganModulator]
         if use_color_organ:
             self.prompt_modulator = ColorOrganModulator()
             logger.info("Using ColorOrganModulator for frequency-to-color mapping")
@@ -468,7 +469,8 @@ class AudioMapper:
 
         # Update prompt modulator with chroma threshold if provided
         if config.triggers and config.triggers.chroma_threshold:
-            self.prompt_modulator.set_chroma_threshold(config.triggers.chroma_threshold)
+            if hasattr(self.prompt_modulator, 'set_chroma_threshold'):
+                self.prompt_modulator.set_chroma_threshold(config.triggers.chroma_threshold)
 
         # Update beat cooldown if provided
         if hasattr(config, 'beat_cooldown_ms'):

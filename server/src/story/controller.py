@@ -15,8 +15,8 @@ from .schema import (
 # Import AudioMetrics - try relative first, fall back to absolute for testing
 try:
     from ..server.protocol import AudioMetrics
-except ImportError:
-    from server.protocol import AudioMetrics
+except (ImportError, ValueError):
+    from server.protocol import AudioMetrics  # type: ignore[no-redef]
 
 logger = logging.getLogger(__name__)
 

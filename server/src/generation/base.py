@@ -45,6 +45,9 @@ class GeneratorCapability(Enum):
     CUSTOM_LORA = auto()  # Custom LoRA loading
     HYPER_SD = auto()  # Hyper-SD acceleration
     LCM = auto()  # LCM acceleration
+    NEGATIVE_PROMPT = auto()  # Negative prompt support
+    SEED_CONTROL = auto()  # Seed control for reproducibility
+    STRENGTH_CONTROL = auto()  # Strength control for img2img
 
 
 @dataclass

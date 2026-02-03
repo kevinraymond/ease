@@ -3,7 +3,10 @@
 import gc
 import torch
 from PIL import Image
-from typing import Optional, Callable
+from typing import Any, Optional, Callable, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from diffusers import AutoencoderTiny
 import logging
 import numpy as np
 
@@ -19,7 +22,7 @@ class TAESDDecoder:
     def __init__(self, device: str = "cuda", dtype: torch.dtype = torch.float16, is_sdxl: bool = False):
         self.device = device
         self.dtype = dtype
-        self._decoder = None
+        self._decoder: Optional["AutoencoderTiny"] = None
         self._is_sdxl = is_sdxl
         self._initialized = False
 
@@ -39,6 +42,7 @@ class TAESDDecoder:
                 torch_dtype=self.dtype,
             ).to(self.device)
 
+            assert self._decoder is not None
             self._decoder.eval()
             self._initialized = True
             logger.info("TAESD decoder initialized successfully")
@@ -56,6 +60,7 @@ class TAESDDecoder:
             # TAESD expects latents scaled differently
             # Standard VAE uses 0.18215, TAESD uses 1.0
             scaled_latents = latents / 0.18215
+            assert self._decoder is not None
             images = self._decoder.decode(scaled_latents).sample
             # Denormalize from [-1, 1] to [0, 1]
             images = (images + 1) / 2
@@ -75,18 +80,18 @@ class StreamDiffusionWrapper:
 
     def __init__(
         self,
-        model_id: str = None,
+        model_id: Optional[str] = None,
         width: int = 512,
         height: int = 512,
-        device: str = None,
+        device: Optional[str] = None,
         # SOTA settings (override global config)
-        use_controlnet: bool = None,
-        controlnet_weight: float = None,
-        use_taesd: bool = None,
-        temporal_coherence: str = None,
+        use_controlnet: Optional[bool] = None,
+        controlnet_weight: Optional[float] = None,
+        use_taesd: Optional[bool] = None,
+        temporal_coherence: Optional[str] = None,
         # Acceleration settings (override global config)
-        acceleration: str = None,
-        hyper_sd_steps: int = None,
+        acceleration: Optional[str] = None,
+        hyper_sd_steps: Optional[int] = None,
     ):
         self.model_id = model_id or settings.model
         self.width = width
@@ -98,14 +103,14 @@ class StreamDiffusionWrapper:
         self._acceleration = acceleration if acceleration is not None else settings.acceleration
         self._hyper_sd_steps = hyper_sd_steps if hyper_sd_steps is not None else settings.hyper_sd_steps
 
-        self._pipe = None
-        self._txt2img_pipe = None
-        self._img2img_pipe = None
-        self._controlnet_pipe = None
-        self._controlnet_txt2img_pipe = None  # txt2img with ControlNet for procedural poses
-        self._controlnet = None
-        self._pose_detector = None
-        self._stream = None
+        self._pipe: Optional[Any] = None
+        self._txt2img_pipe: Optional[Any] = None
+        self._img2img_pipe: Optional[Any] = None
+        self._controlnet_pipe: Optional[Any] = None
+        self._controlnet_txt2img_pipe: Optional[Any] = None  # txt2img with ControlNet for procedural poses
+        self._controlnet: Optional[Any] = None
+        self._pose_detector: Optional[Any] = None
+        self._stream: Optional[Any] = None
         self._last_stream_seed: Optional[int] = None  # Track seed for StreamDiffusion noise updates
         self._initialized = False
 
@@ -167,8 +172,8 @@ class StreamDiffusionWrapper:
 
         # NSFW filtering with fallback to previous frame
         self._nsfw_filter_enabled: bool = settings.nsfw_filter
-        self._safety_checker = None
-        self._feature_extractor = None
+        self._safety_checker: Optional[Any] = None
+        self._feature_extractor: Optional[Any] = None
         self._last_safe_frame: Optional[Image.Image] = None
         self._nsfw_frame_count: int = 0  # Track consecutive NSFW frames for logging
 
@@ -888,7 +893,7 @@ class StreamDiffusionWrapper:
 
         return blended
 
-    def _decode_latents(self, latents: torch.Tensor, use_taesd: bool = None) -> Image.Image:
+    def _decode_latents(self, latents: torch.Tensor, use_taesd: Optional[bool] = None) -> Image.Image:
         """Decode latents to PIL Image, optionally using TAESD for speed."""
         use_taesd = use_taesd if use_taesd is not None else self._use_taesd
 
@@ -920,9 +925,9 @@ class StreamDiffusionWrapper:
         prompt: str,
         negative_prompt: str = "",
         guidance_scale: float = 0.0,
-        num_inference_steps: int = None,
+        num_inference_steps: Optional[int] = None,
         seed: Optional[int] = None,
-        use_taesd: bool = None,
+        use_taesd: Optional[bool] = None,
         latent_callback: Optional[Callable[[torch.Tensor, int, int], torch.Tensor]] = None,
     ) -> Image.Image:
         """Generate image from text prompt."""
@@ -1004,9 +1009,9 @@ class StreamDiffusionWrapper:
         strength: float = 0.5,
         negative_prompt: str = "",
         guidance_scale: float = 0.0,
-        num_inference_steps: int = None,
+        num_inference_steps: Optional[int] = None,
         seed: Optional[int] = None,
-        use_taesd: bool = None,
+        use_taesd: Optional[bool] = None,
         latent_callback: Optional[Callable[[torch.Tensor, int, int], torch.Tensor]] = None,
     ) -> Image.Image:
         """Generate image from prompt + source image."""
@@ -1144,7 +1149,7 @@ class StreamDiffusionWrapper:
         guidance_scale: float,
         num_inference_steps: int,
         generator: torch.Generator,
-        use_taesd: bool = None,
+        use_taesd: Optional[bool] = None,
     ) -> Image.Image:
         """Generate with ControlNet for pose preservation."""
         import time
@@ -1405,7 +1410,7 @@ class StreamDiffusionWrapper:
         guidance_scale: float,
         num_inference_steps: int,
         generator: torch.Generator,
-        use_taesd: bool = None,
+        use_taesd: Optional[bool] = None,
     ) -> Image.Image:
         """Generate using txt2img + ControlNet for procedural poses.
 

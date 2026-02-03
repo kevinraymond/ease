@@ -1,7 +1,7 @@
 """Vocal isolation using Demucs for improved lyric detection."""
 
 import logging
-from typing import Optional
+from typing import Any, Optional
 
 import numpy as np
 import torch
@@ -35,7 +35,7 @@ class VocalSeparator:
         self.model_name = model_name
         self.device = device
         self.sample_rate = sample_rate
-        self._model = None
+        self._model: Optional[Any] = None
         self._model_loaded = False
 
     def _ensure_model_loaded(self) -> bool:

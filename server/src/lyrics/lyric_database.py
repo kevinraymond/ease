@@ -190,6 +190,8 @@ class LyricDatabase:
 
         conn.commit()
         song_id = cursor.lastrowid
+        if song_id is None:
+            raise RuntimeError("Failed to get song ID after insert")
         logger.info(f"Added song: {title} by {artist} (id={song_id})")
         return song_id
 
@@ -423,7 +425,10 @@ class LyricDatabase:
         """, (song_id, time_ms, end_time_ms, text, keywords_json))
 
         conn.commit()
-        return cursor.lastrowid
+        lyric_id = cursor.lastrowid
+        if lyric_id is None:
+            raise RuntimeError("Failed to get lyric ID after insert")
+        return lyric_id
 
     def add_lyrics_batch(
         self,

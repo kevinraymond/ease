@@ -16,9 +16,9 @@ class TensorRTCompiler:
 
     def __init__(
         self,
-        cache_dir: str = None,
-        max_batch_size: int = None,
-        use_fp16: bool = None,
+        cache_dir: Optional[str] = None,
+        max_batch_size: Optional[int] = None,
+        use_fp16: Optional[bool] = None,
     ):
         self.cache_dir = Path(cache_dir or settings.tensorrt_cache_dir)
         self.cache_dir.mkdir(parents=True, exist_ok=True)
@@ -369,7 +369,7 @@ class TensorRTCompiler:
             backend="torch_tensorrt",
             options={
                 "truncate_long_and_double": True,
-                "precision": dtype,
+                "precision": dtype,  # type: ignore[dict-item]
                 "workspace_size": 2 << 30,  # 2GB workspace
             },
         )

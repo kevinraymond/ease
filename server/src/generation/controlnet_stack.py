@@ -293,7 +293,7 @@ class ControlNetStack:
     def get_controlnets_and_images(
         self,
         conditions: Dict[str, Optional[Image.Image]],
-    ) -> Tuple[List[Any], List[Image.Image], List[float]]:
+    ) -> Tuple[List[Any], List[Optional[Image.Image]], List[float]]:
         """Get ControlNet models and conditioning images for pipeline.
 
         Returns:

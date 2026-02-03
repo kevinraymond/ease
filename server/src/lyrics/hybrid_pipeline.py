@@ -396,6 +396,10 @@ class HybridLyricPipeline:
         self._last_fingerprint_raw = fp_raw
 
         # Exact match only - fuzzy matching causes too many false positives
+        if self._database is None:
+            logger.warning("Database not initialized, falling back to transcription")
+            self._set_state(PipelineState.NOT_MATCHED)
+            return
         song = self._database.find_song_by_fingerprint(fp_hash)
 
         if song:
@@ -429,7 +433,7 @@ class HybridLyricPipeline:
             result = self._detector.transcribe()
             self._last_transcription_latency_ms = (time.time() - start_time) * 1000
 
-            if result and result.text.strip():
+            if result and result.text.strip() and self._keyword_extractor is not None:
                 # Extract keywords from transcription
                 keywords = self._keyword_extractor.extract(result.text)
                 keyword_list = [word for word, weight in keywords[:self.config.max_keywords]]

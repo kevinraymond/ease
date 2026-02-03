@@ -141,6 +141,8 @@ class AudioReactiveBackend(BaseImageGenerator):
             strength = request.strength or 0.6
 
         # Generate with onset effects and beat seed jump
+        if self._pipeline is None:
+            raise RuntimeError("AudioReactiveBackend not initialized")
         output_image = self._pipeline.generate(
             image=input_image,
             prompt=request.prompt,
@@ -183,6 +185,8 @@ class AudioReactiveBackend(BaseImageGenerator):
         # Pipeline already warms up during initialize
         # Do an extra generation to ensure everything is ready
         dummy = Image.new("RGB", (self._width, self._height), (100, 100, 100))
+        if self._pipeline is None:
+            raise RuntimeError("AudioReactiveBackend not initialized")
         self._pipeline.generate(
             image=dummy,
             prompt="warmup test",

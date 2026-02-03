@@ -1,6 +1,8 @@
 """JPEG frame encoding for efficient transfer."""
 
 import io
+from typing import Optional
+
 from PIL import Image
 import numpy as np
 from ..config import settings
@@ -9,7 +11,7 @@ from ..config import settings
 class FrameEncoder:
     """Encodes PIL images to JPEG bytes for WebSocket transfer."""
 
-    def __init__(self, quality: int = None):
+    def __init__(self, quality: Optional[int] = None):
         self.quality = quality or settings.jpeg_quality
 
     def encode(self, image: Image.Image) -> bytes:

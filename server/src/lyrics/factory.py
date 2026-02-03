@@ -164,7 +164,11 @@ def create_lyric_provider_from_settings() -> LyricProvider:
     """
     from ..config import settings
 
-    provider_type = getattr(settings, "lyric_provider", "whisper")
+    provider_type_raw = getattr(settings, "lyric_provider", "whisper")
+    # Validate and narrow to LyricProviderType
+    if provider_type_raw not in ("whisper", "hybrid", "none"):
+        provider_type_raw = "whisper"
+    provider_type: LyricProviderType = provider_type_raw  # type: ignore[assignment]
 
     return create_lyric_provider(
         provider_type=provider_type,

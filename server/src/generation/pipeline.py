@@ -612,6 +612,8 @@ class GenerationPipeline:
             return result.image
 
         # Default: use StreamDiffusionWrapper
+        if self._diffusion is None:
+            raise RuntimeError("No generator available")
         return self._diffusion.generate_txt2img(
             prompt=params.prompt,
             negative_prompt=params.negative_prompt,
@@ -657,6 +659,8 @@ class GenerationPipeline:
             return result.image
 
         # Default: use StreamDiffusionWrapper
+        if self._diffusion is None:
+            raise RuntimeError("No generator available")
         return self._diffusion.generate_img2img(
             prompt=params.prompt,
             image=frame,

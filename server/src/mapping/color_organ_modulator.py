@@ -10,7 +10,7 @@ the model's attention to that color token.
 """
 
 from dataclasses import dataclass, field
-from typing import List, Optional
+from typing import Dict, List, Optional, Tuple
 import logging
 
 from ..server.protocol import AudioMetrics
@@ -45,7 +45,7 @@ class ColorOrganConfig:
 
     # Additive color mixing - when multiple bands are strong
     # Updated for red/yellow/blue color scheme
-    mix_colors: dict = field(default_factory=lambda: {
+    mix_colors: Dict[Tuple[str, ...], str] = field(default_factory=lambda: {
         ("red", "yellow"): "orange",      # R+Y = Orange
         ("red", "blue"): "purple",        # R+B = Purple
         ("yellow", "blue"): "green",      # Y+B = Green
@@ -218,6 +218,8 @@ class ColorOrganModulator:
     ) -> Optional[str]:
         """Get additive color mix result if applicable."""
         cfg = self.config
+
+        key: Tuple[str, ...]
 
         # Check for RGB mix (white)
         if (bass > cfg.mix_threshold and

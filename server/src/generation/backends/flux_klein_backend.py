@@ -24,7 +24,7 @@ import logging
 import time
 from dataclasses import dataclass
 from enum import Enum
-from typing import Optional, Literal
+from typing import Any, Optional, Literal
 
 import torch
 from PIL import Image
@@ -311,16 +311,16 @@ class FluxKleinBackend(BaseImageGenerator):
         self._cache_prompt_embeds = cache_prompt_embeds
 
         # Pipeline components
-        self._pipe = None
+        self._pipe: Optional[Any] = None
         self._dtype = self._get_torch_dtype()
 
         # Cached text embeddings for prompt caching optimization
         self._cached_prompt: Optional[str] = None
-        self._cached_prompt_embeds = None
-        self._cached_pooled_prompt_embeds = None
+        self._cached_prompt_embeds: Optional[torch.Tensor] = None
+        self._cached_pooled_prompt_embeds: Optional[torch.Tensor] = None
 
         # Previous latent for blending optimization
-        self._previous_latent = None
+        self._previous_latent: Optional[torch.Tensor] = None
 
         # Track if we've compiled (for logging)
         self._is_compiled = False
@@ -646,7 +646,7 @@ class FluxKleinBackend(BaseImageGenerator):
         if request.seed is not None:
             generator = torch.Generator(device="cpu").manual_seed(request.seed)
         else:
-            seed_used = torch.randint(0, 2**32 - 1, (1,)).item()
+            seed_used = int(torch.randint(0, 2**32 - 1, (1,)).item())
             generator = torch.Generator(device="cpu").manual_seed(seed_used)
 
         # Determine generation mode

@@ -358,7 +358,7 @@ class PromptModulator:
             max_additions = self.config.max_keyword_additions
 
             sorted_weighted = sorted(weighted_additions, key=lambda x: x[1], reverse=True)
-            all_keywords = []
+            all_keywords: list[str] = []
 
             for keyword, weight in sorted_weighted:
                 if len(all_keywords) >= max_additions:

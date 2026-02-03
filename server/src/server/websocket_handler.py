@@ -6,7 +6,7 @@ import json
 import logging
 import os
 import time
-from typing import Optional
+from typing import Literal, Optional
 
 import numpy as np
 import psutil
@@ -166,10 +166,9 @@ class GenerationSession:
         """Handle incoming audio metrics."""
         metrics_data = msg.get("metrics", {})
         # Debug: log incoming metrics periodically
-        if hasattr(self, '_metrics_count'):
-            self._metrics_count += 1
-        else:
-            self._metrics_count = 1
+        if not hasattr(self, '_metrics_count'):
+            self._metrics_count: int = 0
+        self._metrics_count += 1
         if self._metrics_count % 100 == 0:
             logger.info(f"Received metrics #{self._metrics_count}: rms={metrics_data.get('rms', 0):.3f}, bass={metrics_data.get('bass', 0):.3f}")
 
@@ -641,6 +640,11 @@ class GenerationSession:
                 continue
 
             try:
+                # Pipeline should be initialized before loop starts
+                if self.pipeline is None:
+                    await asyncio.sleep(0.1)
+                    continue
+
                 # Generate frame in thread pool
                 frame = await loop.run_in_executor(
                     None,
@@ -753,7 +757,7 @@ class GenerationSession:
 
     async def _send_status(
         self,
-        status: str,
+        status: Literal["connected", "generating", "stopped", "error", "initializing", "switching"],
         message: Optional[str] = None,
         include_server_config: bool = False,
         include_system_stats: bool = False,

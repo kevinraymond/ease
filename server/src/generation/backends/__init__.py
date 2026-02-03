@@ -145,7 +145,7 @@ def create_generator_from_settings() -> ImageGenerator:
     else:
         kwargs["model_id"] = settings.model
 
-    return create_generator(backend=backend, **kwargs)
+    return create_generator(backend=backend, **kwargs)  # type: ignore[arg-type]
 
 
 __all__ = [

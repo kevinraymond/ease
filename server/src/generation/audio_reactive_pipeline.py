@@ -16,7 +16,7 @@ Key optimizations:
 import gc
 import logging
 import os
-from typing import Optional, Tuple
+from typing import Any, Optional, Tuple
 
 import torch
 from PIL import Image
@@ -52,8 +52,8 @@ class AudioReactivePipeline:
         self.use_taesd = use_taesd
 
         # Pipeline components (initialized lazily)
-        self._pipe = None
-        self._taesd = None
+        self._pipe: Optional[Any] = None
+        self._taesd: Optional[Any] = None
         self._initialized = False
 
         # Caching
@@ -139,7 +139,7 @@ class AudioReactivePipeline:
         self,
         prompt: str,
         negative_prompt: str = ""
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
+    ) -> Tuple[torch.Tensor, Optional[torch.Tensor]]:
         """Get prompt embeddings, using cache if available."""
         cache_key = f"{prompt}||{negative_prompt}"
 
