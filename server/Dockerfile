@@ -3,12 +3,13 @@ FROM nvidia/cuda:12.1.1-runtime-ubuntu22.04
 WORKDIR /app
 
 # Install Python 3.10 and dependencies
-RUN apt-get update && apt-get install -y \
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    apt-get update && apt-get install -y \
     python3.10 \
     python3-pip \
     python3.10-venv \
-    git \
-    && rm -rf /var/lib/apt/lists/*
+    git
 
 # Install uv package manager
 RUN pip install uv
@@ -17,7 +18,9 @@ RUN pip install uv
 COPY pyproject.toml uv.lock ./
 
 # Install dependencies
-RUN uv sync --frozen
+RUN --mount=type=cache,target=/root/.cache/pip \
+    --mount=type=cache,target=/root/.cache/uv \
+    uv sync --frozen
 
 # Copy source code
 COPY src/ ./src/

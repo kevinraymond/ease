@@ -8,8 +8,27 @@ on:
   workflow_dispatch:
 
 jobs:
+  # Detect which files changed
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      server: ${{ steps.filter.outputs.server }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            server:
+              - 'server/**'
+            frontend:
+              - 'frontend/**'
+
   # Frontend checks
   frontend:
+    needs: changes
+    if: needs.changes.outputs.frontend == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -34,6 +53,8 @@ jobs:
 
   # Server checks
   server:
+    needs: changes
+    if: needs.changes.outputs.server == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -56,8 +77,10 @@ jobs:
       - name: Type check
         run: uv run mypy src/ --ignore-missing-imports
 
-  # Docker build test (no push)
-  docker:
+  # Docker build tests (parallel, only on relevant changes)
+  docker-server:
+    needs: changes
+    if: needs.changes.outputs.server == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -72,6 +95,16 @@ jobs:
           push: false
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+  docker-frontend:
+    needs: changes
+    if: needs.changes.outputs.frontend == 'true' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
       - name: Build frontend image
         uses: docker/build-push-action@v6
