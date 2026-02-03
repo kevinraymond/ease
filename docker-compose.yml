@@ -1,0 +1,47 @@
+# EASE Docker Compose Configuration
+#
+# Quick start (pre-built images):
+#   docker compose up
+#
+# Build from source:
+#   docker compose up --build
+#
+services:
+  # Backend AI server
+  server:
+    image: ghcr.io/kevinraymond/ease-server:latest
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    ports:
+      - "8765:8765"
+    volumes:
+      # Persist model cache
+      - huggingface-cache:/root/.cache/huggingface
+      # Mount config
+      - ./server/.env:/app/.env:ro
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [ gpu ]
+    restart: unless-stopped
+
+  # Frontend web server
+  frontend:
+    image: ghcr.io/kevinraymond/ease-frontend:latest
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "5173:80"
+    depends_on:
+      - server
+    restart: unless-stopped
+
+volumes:
+  huggingface-cache:

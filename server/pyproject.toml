@@ -1,0 +1,64 @@
+[project]
+name = "ease-server"
+version = "1.0.0"
+description = "EASE backend: Real-time AI image generation server"
+authors = [{ name = "Kevin Raymond" }]
+license = { text = "MIT" }
+repository = "https://github.com/kevinraymond/ease"
+requires-python = ">=3.10"
+dependencies = [
+    "fastapi>=0.109.0",
+    "uvicorn[standard]>=0.27.0",
+    "websockets>=12.0",
+    "torch>=2.1.0",
+    "diffusers>=0.36.0", # FLUX.2 support requires 0.36.0+
+    "transformers>=4.36.0",
+    "accelerate>=0.25.0",
+    "peft>=0.7.0", # Required for LCM-LoRA fast generation
+    "pillow>=10.2.0",
+    "numpy>=1.26.0",
+    "pydantic>=2.5.0",
+    "pydantic-settings>=2.1.0",
+    "opencv-python>=4.13.0.90",
+    "insightface>=0.7.3",
+    "onnxruntime-gpu>=1.23.2",
+    "controlnet-aux>=0.0.10",
+    "faster-whisper>=1.0.0",
+    "demucs>=4.0.1",
+    "pyacoustid>=1.3.0",
+]
+
+[project.optional-dependencies]
+tensorrt = [
+    "tensorrt>=8.6.0",
+    "polygraphy>=0.49.0",
+]
+streamdiffusion = [
+    "streamdiffusion",  # Installed from fork via [tool.uv.sources]
+]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-asyncio>=0.23.0",
+    "black>=24.1.0",
+    "ruff>=0.1.0",
+    "mypy>=1.8.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.black]
+line-length = 100
+target-version = ["py310"]
+
+[tool.uv.sources]
+diffusers = { git = "https://github.com/huggingface/diffusers.git" }
+streamdiffusion = { git = "https://github.com/kevinraymond/StreamDiffusion.git" }

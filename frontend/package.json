@@ -1,0 +1,33 @@
+{
+  "name": "ease",
+  "version": "1.0.0",
+  "description": "EASE - Effortless Audio-Synesthesia Experience: Real-time audio visualizer with AI-powered image generation",
+  "author": "Kevin Raymond",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kevinraymond/ease.git"
+  },
+  "homepage": "https://github.com/kevinraymond/ease",
+  "bugs": {
+    "url": "https://github.com/kevinraymond/ease/issues"
+  },
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "lint": "eslint . --ext ts --report-unused-disable-directives --max-warnings 0",
+    "test": "vitest"
+  },
+  "dependencies": {
+    "three": "^0.167.0"
+  },
+  "devDependencies": {
+    "@types/three": "^0.167.0",
+    "@webgpu/types": "^0.1.44",
+    "typescript": "^5.5.3",
+    "vite": "^5.3.4",
+    "vitest": "^2.0.0"
+  }
+}
