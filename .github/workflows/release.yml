@@ -3,6 +3,19 @@ name: Release
 on:
   push:
     branches: [main]
+    paths:
+      - 'server/**'
+      - 'frontend/**'
+  workflow_dispatch:
+    inputs:
+      release_server:
+        description: 'Release server'
+        type: boolean
+        default: false
+      release_frontend:
+        description: 'Release frontend'
+        type: boolean
+        default: false
 
 env:
   REGISTRY: ghcr.io
@@ -10,14 +23,14 @@ env:
 jobs:
   # Version bump and tagging (sequential to avoid git conflicts)
   release:
-    # Skip version bump commits
-    if: "!contains(github.event.head_commit.message, '[skip ci]')"
+    # Skip version bump commits (manual triggers always run)
+    if: github.event_name == 'workflow_dispatch' || !contains(github.event.head_commit.message, '[skip ci]')
     runs-on: ubuntu-latest
     permissions:
       contents: write
     outputs:
-      server_changed: ${{ steps.changes.outputs.server }}
-      frontend_changed: ${{ steps.changes.outputs.frontend }}
+      server_changed: ${{ steps.changes.outputs.server == 'true' || inputs.release_server }}
+      frontend_changed: ${{ steps.changes.outputs.frontend == 'true' || inputs.release_frontend }}
       server_version: ${{ steps.server-version.outputs.new_version }}
       frontend_version: ${{ steps.frontend-version.outputs.new_version }}
     steps:
@@ -37,7 +50,7 @@ jobs:
               - 'frontend/**'
 
       - name: Bump server version
-        if: steps.changes.outputs.server == 'true'
+        if: steps.changes.outputs.server == 'true' || inputs.release_server
         id: server-version
         run: |
           # Get commits since last server tag
@@ -76,7 +89,7 @@ jobs:
           sed -i "s/^version = \".*\"/version = \"$NEW_VERSION\"/" server/pyproject.toml
 
       - name: Bump frontend version
-        if: steps.changes.outputs.frontend == 'true'
+        if: steps.changes.outputs.frontend == 'true' || inputs.release_frontend
         id: frontend-version
         run: |
           # Get commits since last frontend tag
@@ -122,11 +135,11 @@ jobs:
 
           # Stage changed files
           CHANGES=""
-          if [ "${{ steps.changes.outputs.server }}" == "true" ]; then
+          if [ "${{ steps.changes.outputs.server == 'true' || inputs.release_server }}" == "true" ]; then
             git add server/pyproject.toml
             CHANGES="${CHANGES}server-v${{ steps.server-version.outputs.new_version }} "
           fi
-          if [ "${{ steps.changes.outputs.frontend }}" == "true" ]; then
+          if [ "${{ steps.changes.outputs.frontend == 'true' || inputs.release_frontend }}" == "true" ]; then
             git add frontend/package.json frontend/package-lock.json 2>/dev/null || git add frontend/package.json
             CHANGES="${CHANGES}frontend-v${{ steps.frontend-version.outputs.new_version }} "
           fi
@@ -136,10 +149,10 @@ jobs:
             git commit -m "chore: release ${CHANGES}[skip ci]"
 
             # Create tags
-            if [ "${{ steps.changes.outputs.server }}" == "true" ]; then
+            if [ "${{ steps.changes.outputs.server == 'true' || inputs.release_server }}" == "true" ]; then
               git tag "server-v${{ steps.server-version.outputs.new_version }}"
             fi
-            if [ "${{ steps.changes.outputs.frontend }}" == "true" ]; then
+            if [ "${{ steps.changes.outputs.frontend == 'true' || inputs.release_frontend }}" == "true" ]; then
               git tag "frontend-v${{ steps.frontend-version.outputs.new_version }}"
             fi
 
