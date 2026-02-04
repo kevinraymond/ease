@@ -14,7 +14,7 @@ Real-time audio visualizer with AI-powered image generation. Drop in audio, see 
 
 ## I'm a Human
 
-This is an experimental project, for fun and learning. I don't have any huge background with audio or visualization except that I've always been interested and have dabbled for many years.
+This is an experimental project, for fun and learning. I've always been interested in reactive visualizations and have dabbled for many years.
 
 My hope is that EASE makes playing around with these ideas more accessible. It's an open book to hack apart, or just run it and enjoy some crazy visuals. Exploration is fun - this is the result!
 
